@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhu.mapper.OrderItemMapper">
+
+   <resultMap type="OrderItem" id="OrderItemMap">
+     <id column="id" property="id"/>
+     <result column="quantity" property="quantity"/>
+     <result column="price" property="price"/>
+     <result column="order_id" property="order_id"/>
+     <result column="book_id" property="book_id"/>
+   </resultMap> 
+   
+     <insert id="add">
+        insert into orderitem(id,quantity,price,order_id,book_id) 
+              values(#{id},#{quantity},#{price},#{order_id},#{book_id})
+     </insert>
+     <delete id="delete">
+         delete from orderitem where order_id=#{order_id}
+     </delete>
+
+</mapper>

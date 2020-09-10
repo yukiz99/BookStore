@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhu.mapper.OrderMapper">
+
+<resultMap id="OrderUserMap" type="Order" >
+        <id column="id" property="id" />
+        <result column="ordertime" property="ordertime" />
+        <result column="price" property="price"/>
+        <result column="state" property="state"/>
+        <result column="user_id" property="user_id"/>
+	      <association column="user_id" property="user" javaType="User" select="getUserForOrder">
+		  </association>
+ </resultMap>    
+ <resultMap  id="OrderUserOrderDetailMap" type="Order" extends="OrderUserMap" >
+ 	    <collection property="orderItems" ofType="OrderItem">
+	       <id column="orderItem_id" property="id"/>
+	       <result column="quantity" property="quantity"/>
+	       <result column="orderItem_price" property="price"/>
+	       <result column="order_id" property="order_id"/>
+	       <result column="book_id" property="book_id"/>
+	           <!-- 书本 -->
+		       <association property="book" javaType="Book">
+		        <id column="book_id" property="id"/>
+		        <result column="name" property="name"/>
+		        <result column="author" property="author"/>
+		        <result column="book_price" property="price"/>
+		        <result column="image" property="image"/>
+		        <result column="description" property="description"/>	
+		        <result column="category_id" property="category_id"/>	
+			          <!-- 书类 -->
+	                                              <association property="category" javaType="Category">
+					       <id column="category_id" property="id"/>
+					       <result column="category_name" property="name"/>
+				</association>
+		     </association>
+	    </collection>	    
+ </resultMap>
+ 
+ 
+ 
+ <!-- 嵌套查询 -->
+ <resultMap type="User" id="UserMap">
+        <id column="user_id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="cellphone" property="cellphone"/>
+        <result column="email" property="email"/>
+        <result column="address" property="address"/>	 
+ </resultMap>
+ <select id="getUserForOrder" resultMap="UserMap"> 
+   select*from user where id=#{user_id}
+ </select>
+
+
+
+<!-- 主要所有除order外的id都起了别名，
+     其余主要要求orderItem_id、category_name需要特别搞出来。category_name与书name的同名了
+ -->
+    
+   <select id="getAll" resultMap="OrderUserMap">
+       select *from orders
+   </select>
+   <select id="getAllByState" resultMap="OrderUserMap">
+          select *from orders where state=#{state}
+   </select>  
+   <select id="getAllByUser" resultMap="OrderUserMap">
+         select*from orders where user_id=#{user_id}
+   </select> 
+   <select id="getAllByUserAndState" resultMap="OrderUserMap">
+         select*from orders where user_id=#{user_id} and state=#{state}
+   </select>
+   
+   <!-- 这里的book_price重复查询了 -->
+   <select id="find" resultMap="OrderUserOrderDetailMap">
+          select 
+                   orders.*,user.*, book.*,book.price book_price,
+                   category.id category_id,category.name category_name,
+                   orderItem.id  orderItem_id ,orderItem.quantity,
+                   orderItem.price orderItem_price,orderItem.book_id,orderItem.order_id
+          from 
+                   orders,user,orderItem,book,category
+          where 
+                   orders.id=#{id}
+               and orderItem.order_id=orders.id
+               and user.id=orders.user_id
+               and book.id=orderItem.book_id
+               and category.id=book.category_id
+   </select>
+   
+   
+       <insert id="add" parameterType="Order">
+               insert into orders(id,ordertime,price,state,user_id) values(#{id},#{ordertime},#{price},#{state},#{user_id})
+       </insert> 
+       <delete id="delete" parameterType="Order">
+               delete from orders where id=#{id}
+       </delete>
+       <update id="updateOrderState">
+         update orders set state=1 where id=#{id}
+       </update>
+
+</mapper>
